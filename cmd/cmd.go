@@ -63,6 +63,14 @@ var (
 				_ = cmd.Help()
 				return
 			}
+			if startHeight > endHeight{
+				cmd.Println("startHeight cannot bigger than endHeight")
+				return
+			}
+			if startHeight<=0{
+				cmd.Println("startHeight error")
+				return
+			}
 			sta, err := ValSta(startHeight, endHeight)
 			if err != nil {
 				cmd.Println(err.Error())
