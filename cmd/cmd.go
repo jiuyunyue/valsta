@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"os"
 	"strconv"
 
@@ -50,33 +51,28 @@ var (
 		Use:   "start [start height] [end height]",
 		Short: "Start valsta",
 		Args:  cobra.RangeArgs(2, 2),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error{
 			startHeight, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
-				cmd.Println(err.Error())
-				_ = cmd.Help()
-				return
+				return err
 			}
 			endHeight, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
-				cmd.Println(err.Error())
-				_ = cmd.Help()
-				return
+				return err
 			}
 			if startHeight > endHeight{
 				cmd.Println("startHeight cannot bigger than endHeight")
-				return
+				return errors.New("startHeight cannot bigger than endHeight")
 			}
 			if startHeight<=0{
-				cmd.Println("startHeight error")
-				return
+				return errors.New("startHeight error")
 			}
 			sta, err := ValSta(startHeight, endHeight)
 			if err != nil {
-				cmd.Println(err.Error())
-				_ = cmd.Help()
+				return err
 			}
 			cmd.Printf("insert %d validators success \n", len(sta))
+			return nil
 		},
 	}
 )
