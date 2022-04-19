@@ -8,6 +8,9 @@ import (
 	"strconv"
 	"strings"
 
+	typestx "github.com/cosmos/cosmos-sdk/types/tx"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	"github.com/jiuyunyue/valsta/src/types"
 	"github.com/jiuyunyue/valsta/utils"
 
@@ -19,14 +22,17 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (c *GClient) QueryUptime(start, end int64) (sig types.Uptime) {
+func (c *GClient) QueryUptime(start, end int64) (sig types.Uptime, err error) {
 	sig = make(map[string]types.ValidatorInfo)
-	validators := c.QueryValidators()
+	validators, err := c.QueryValidators()
+	if err != nil {
+		return nil, err
+	}
 
 	for from := start; from <= end; from++ {
 		block, err := c.TMServiceQuery.GetBlockByHeight(context.Background(), &tmservice.GetBlockByHeightRequest{Height: from})
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		utils.CallClear()
@@ -63,16 +69,16 @@ func (c *GClient) QueryUptime(start, end int64) (sig types.Uptime) {
 		val.SurRate = str
 		sig[k] = val
 	}
-	return sig
+	return sig, nil
 }
 
-func (c *GClient) QueryJailed(start, end int64) (list types.Jailed) {
+func (c *GClient) QueryJailed(start, end int64) (list types.Jailed, err error) {
 	list = make(map[string]bool)
 
 	for from := start; from <= end; from++ {
 		res, err := c.SignClient.BlockResults(context.Background(), &from)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		utils.CallClear()
@@ -89,7 +95,7 @@ func (c *GClient) QueryJailed(start, end int64) (list types.Jailed) {
 					if bytes.Equal(attr.Key, []byte(slakingtypes.AttributeKeyJailed)) {
 						consAddress, err := sdk.ConsAddressFromBech32(string(attr.Value))
 						if err != nil {
-							panic(err)
+							return nil, err
 						}
 						address := strings.ToUpper(hex.EncodeToString(consAddress.Bytes()))
 						list[address] = true
@@ -98,10 +104,10 @@ func (c *GClient) QueryJailed(start, end int64) (list types.Jailed) {
 			}
 		}
 	}
-	return list
+	return list, nil
 }
 
-func (c *GClient) QueryValidators() map[string]sdk.AccAddress {
+func (c *GClient) QueryValidators() (map[string]sdk.AccAddress, error) {
 	validatorInfos := make(map[string]sdk.AccAddress)
 	Pagination := &query.PageRequest{
 		Key:        []byte(""),
@@ -115,7 +121,7 @@ func (c *GClient) QueryValidators() map[string]sdk.AccAddress {
 		&stakingtypes.QueryValidatorsRequest{Pagination: Pagination},
 	)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	for _, val := range validators.Validators {
@@ -123,13 +129,54 @@ func (c *GClient) QueryValidators() map[string]sdk.AccAddress {
 		err = cdc.UnpackAny(val.ConsensusPubkey, &pk)
 		valAddress, err := sdk.ValAddressFromBech32(val.OperatorAddress)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		accAddress, err := sdk.AccAddressFromHex(hex.EncodeToString(valAddress.Bytes()))
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		validatorInfos[pk.Address().String()] = accAddress
 	}
-	return validatorInfos
+	return validatorInfos, nil
+}
+
+func (c *GClient) QueryVoters() (voters map[string]types.VoterInfo, err error) {
+	voters = make(map[string]types.VoterInfo)
+
+	proposals, err := c.GovQuery.Proposals(context.Background(), &govtypes.QueryProposalsRequest{})
+	if err != nil {
+		return nil, err
+	}
+	for i := range proposals.Proposals {
+		queryEvent := fmt.Sprintf("proposal_vote.proposal_id=%v", i)
+		Pagination := &query.PageRequest{
+			Key:        []byte(""),
+			Limit:      200,
+			Offset:     0,
+			CountTotal: false,
+			Reverse:    false,
+		}
+		res, err := c.TxClient.GetTxsEvent(context.Background(), &typestx.GetTxsEventRequest{Events: []string{queryEvent}, Pagination: Pagination, OrderBy: 1})
+		if err != nil {
+			return nil, err
+		}
+		for _, tx := range res.Txs {
+			for _, msg := range tx.Body.Messages {
+				var mv sdk.Msg
+				err = cdc.UnpackAny(msg, &mv)
+				if err != nil {
+					return nil, err
+				}
+				v := mv.(*govtypes.MsgVote)
+				voter := voters[v.Voter]
+				voter.Address = v.Voter
+				voter.VoteTimes++
+				voter.VoteProposals = append(voter.VoteProposals, uint64(i))
+
+				voters[v.Voter] = voter
+			}
+		}
+	}
+
+	return voters, nil
 }

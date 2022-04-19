@@ -21,9 +21,7 @@ install:
 
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -w -s
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs misspell -w
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./lite/*/statik.go" -not -path "*.pb.go" | xargs goimports -w -local github.com/jiuyunyue/valsta
-
 
 setup: build-linux
 	@docker build -ldflags '$(ldflags)'  -t valsta .

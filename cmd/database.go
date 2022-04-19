@@ -3,25 +3,24 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/jiuyunyue/valsta/src/types"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/jiuyunyue/valsta/src/database"
-	"github.com/jmoiron/sqlx"
+	"github.com/jiuyunyue/valsta/src/types"
 )
 
-func Init() {
+func Init() error {
 	db, err := sqlx.Connect(database.Mysql, database.LocalUrl+database.Database)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer db.Close()
 	db.SetConnMaxLifetime(100)
 	db.SetMaxIdleConns(10)
 	err = db.Ping()
 	if err != nil {
-		panic(err)
+		return err
 	}
-
 	_, err = db.Exec("CREATE TABLE IF NOT EXISTS " +
 		" validator_infos " +
 		"( " +
@@ -32,8 +31,9 @@ func Init() {
 		" sur_rate varchar(10) NOT NULL )")
 
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 func CleanDatabase() {

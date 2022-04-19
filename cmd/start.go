@@ -14,8 +14,15 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	uptime := grpcClient.QueryUptime(startHeight, endHeight)
-	jailed := grpcClient.QueryJailed(startHeight, endHeight)
+
+	uptime, err := grpcClient.QueryUptime(startHeight, endHeight)
+	if err != nil {
+		return nil, err
+	}
+	jailed, err := grpcClient.QueryJailed(startHeight, endHeight)
+	if err != nil {
+		return nil, err
+	}
 
 	for k, v := range jailed {
 		val := uptime[k]
@@ -45,4 +52,16 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 		return nil, err
 	}
 	return validatorInfos, nil
+}
+
+func GetVoterInfos() (voters map[string]types.VoterInfo, err error) {
+	grpcClient, err := client.NewGRPCClient(GrpcUrl, RpcUrl)
+	if err != nil {
+		return nil, err
+	}
+	voters, err = grpcClient.QueryVoters()
+	if err != nil {
+		return nil, err
+	}
+	return voters, nil
 }

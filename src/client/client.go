@@ -31,6 +31,7 @@ func init() {
 
 	registry := codectypes.NewInterfaceRegistry()
 	cryptocodec.RegisterInterfaces(registry)
+	govtypes.RegisterInterfaces(registry)
 	cdc = codec.NewProtoCodec(registry)
 }
 
@@ -65,6 +66,7 @@ func NewGRPCClient(url string, rpc string) (GClient, error) {
 		AuthQuery:      authtypes.NewQueryClient(clientConn),
 		TMServiceQuery: tmservice.NewServiceClient(clientConn),
 		SlakingQuery:   slakingtypes.NewQueryClient(clientConn),
+		GovQuery:       govtypes.NewQueryClient(clientConn),
 		SignClient:     httpClient,
 		TxClient:       tx.NewServiceClient(clientConn),
 	}, nil

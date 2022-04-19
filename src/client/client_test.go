@@ -4,9 +4,17 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	typestx "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/tendermint/tendermint/crypto/tmhash"
+
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -23,18 +31,31 @@ import (
 )
 
 const (
-	UptickGrpcUrl = "peer1.testnet.uptick.network:9090"
+	UptickGrpcUrl = "peer0.testnet.uptick.network:9090"
 	LocalGrpc     = "localhost:9090"
 
-	UptickRpc = "http://peer1.testnet.uptick.network:26657"
+	UptickRpc = "http://peer0.testnet.uptick.network:26657"
 	LocalRpc  = "http://localhost:26657"
 )
 
 func TestQueryBalance(t *testing.T) {
 	c, err := NewGRPCClient(UptickGrpcUrl, UptickGrpcUrl)
 	require.NoError(t, err)
-	res, _ := c.BankQuery.Balance(context.Background(), &types.QueryBalanceRequest{Address: "uptick10t4kkjetahnjh5d8h2d6dqnp7cvaestxxyvjgw", Denom: "auptick"})
-	t.Log(res.String())
+
+	Pagination := &query.PageRequest{
+		Key:        []byte(""),
+		Limit:      1000,
+		Offset:     0,
+		CountTotal: false,
+		Reverse:    false,
+	}
+	res, err := c.GovQuery.Votes(context.Background(), &govtypes.QueryVotesRequest{ProposalId: 1, Pagination: Pagination})
+	require.NoError(t, err)
+	fmt.Println(len(res.Votes))
+
+	res1, err := c.BankQuery.Balance(context.Background(), &types.QueryBalanceRequest{Address: "uptick1xt42uffeg655ew0tr2ldvuy4lqhy89tmnkavmu", Denom: "auptick"})
+	require.NoError(t, err)
+	t.Log(res1.String())
 }
 
 func TestTmQueryBlock(t *testing.T) {
@@ -113,6 +134,100 @@ func TestQueryHttpEvent(t *testing.T) {
 	}
 }
 
+func TestQueryProposals(t *testing.T) {
+	c, err := NewGRPCClient(UptickGrpcUrl, UptickRpc)
+	require.NoError(t, err)
+
+	proposals, err := c.GovQuery.Proposals(context.Background(), &govtypes.QueryProposalsRequest{})
+	require.NoError(t, err)
+	t.Logf("has proposal :%v", len(proposals.Proposals))
+}
+
+func TestQueryTxByEventType(t *testing.T) {
+	c, err := NewGRPCClient(UptickGrpcUrl, UptickRpc)
+	require.NoError(t, err)
+	Pagination := &query.PageRequest{
+		Key:        []byte(""),
+		Limit:      200,
+		Offset:     0,
+		CountTotal: false,
+		Reverse:    false,
+	}
+	res, err := c.TxClient.GetTxsEvent(context.Background(), &typestx.GetTxsEventRequest{Events: []string{"proposal_vote.proposal_id=5"}, Pagination: Pagination, OrderBy: 1})
+	require.NoError(t, err)
+	for _, tx := range res.Txs {
+		for _, msg := range tx.Body.Messages {
+			var mv sdk.Msg
+			err = cdc.UnpackAny(msg, &mv)
+			require.NoError(t, err)
+
+			v := mv.(*govtypes.MsgVote)
+			fmt.Println(v.Voter)
+		}
+	}
+}
+
+func TestQueryVoters(t *testing.T) {
+	c, err := NewGRPCClient(UptickGrpcUrl, UptickRpc)
+	require.NoError(t, err)
+	voters, err := c.QueryVoters()
+	require.NoError(t, err)
+	for k, v := range voters {
+		t.Logf("voter %v, %s", k, v)
+	}
+}
+
+func TestQueryTxEvent(t *testing.T) {
+	c, err := NewGRPCClient(UptickGrpcUrl, UptickRpc)
+	require.NoError(t, err)
+	height := int64(390733)
+
+	for ; height < 4000000; height++ {
+		res, err := c.TMServiceQuery.GetBlockByHeight(context.Background(), &tmservice.GetBlockByHeightRequest{Height: height})
+		require.NoError(t, err)
+
+		for _, tx := range res.Block.GetData().Txs {
+			hash := hex.EncodeToString(tmhash.Sum(tx))
+			res, err := c.TxClient.GetTx(context.Background(), &typestx.GetTxRequest{
+				Hash: hash,
+			})
+			fmt.Println(res.TxResponse.Timestamp)
+			require.NoError(t, err)
+			if len(res.TxResponse.Logs) == 0 {
+				continue
+			}
+			stringEvents := res.TxResponse.Logs[0].Events
+			//var events []proto.Message
+			for _, e := range stringEvents {
+				abciEvent := abci.Event{}
+				if e.Type == govtypes.EventTypeProposalVote {
+					abciEvent.Type = e.Type
+					for _, attr := range e.Attributes {
+						abciEvent.Attributes = append(abciEvent.Attributes, abci.EventAttribute{
+							Key:   []byte(attr.Key),
+							Value: []byte(attr.Value),
+						})
+					}
+					//protoEvent, err := sdk.ParseTypedEvent(abciEvent)
+					require.NoError(t, err)
+					fmt.Println(e.String())
+					//events = append(events, protoEvent)
+				}
+			}
+
+			if len(stringEvents) != 2 {
+				continue
+			}
+			if stringEvents[0].Type == sdk.EventTypeMessage && stringEvents[1].Type == govtypes.EventTypeProposalVote {
+				fmt.Printf("height:%d \n", height)
+				fmt.Println(stringEvents[0].String())
+				fmt.Println(stringEvents[1].String())
+			}
+		}
+
+	}
+}
+
 func TestAddressConvert(t *testing.T) {
 	consAddress, err := sdk.ConsAddressFromBech32("uptickvalcons1ksw5fem64junr3330ssy65l9uj0xkg9k3nerlw")
 	require.NoError(t, err)
@@ -153,6 +268,7 @@ func TestQueryValVaa(t *testing.T) {
 
 		err = cdc.UnpackAny(val.ConsensusPubkey, &pk)
 		pubKey, err = cryptocodec.ToTmPubKeyInterface(pk)
+		require.NoError(t, err)
 
 		t.Logf(" pubkey %s", pk.Address())
 		t.Logf(" pubkey %s", pubKey.Address())
@@ -162,7 +278,8 @@ func TestQueryValVaa(t *testing.T) {
 func TestQueryJailed(t *testing.T) {
 	c, err := NewGRPCClient(UptickGrpcUrl, UptickRpc)
 	require.NoError(t, err)
-	jailed := c.QueryJailed(300069, 300069)
+	jailed, err := c.QueryJailed(300069, 300069)
+	require.NoError(t, err)
 	for k, v := range jailed {
 		t.Log("keys: ", k, "value:", v)
 	}
@@ -171,7 +288,8 @@ func TestQueryJailed(t *testing.T) {
 func TestQueryValidatorInfos(t *testing.T) {
 	c, err := NewGRPCClient(UptickGrpcUrl, UptickRpc)
 	require.NoError(t, err)
-	validators := c.QueryValidators()
+	validators, err := c.QueryValidators()
+	require.NoError(t, err)
 	for k, v := range validators {
 		t.Log("keys: ", k, "value:", v.String())
 	}
