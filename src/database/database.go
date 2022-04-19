@@ -66,9 +66,8 @@ func DropTable() {
 		panic(err)
 	}
 }
+
 func InsertIntoValInfos(address, valAddress, surRate string, times int, jailed bool) error {
-	// select * from validator_infos
-	// INSERT INTO table_name (address,times,acc_address,jailed,sur_rate) VALUES (value1,value2,value3,...);
 	_, err := db.Exec(
 		fmt.Sprintf("INSERT into validator_infos (address,times,acc_address,jailed,sur_rate) VALUES ('%s',%d,'%s',%t,'%s')",
 			address,

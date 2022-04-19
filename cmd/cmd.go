@@ -17,8 +17,12 @@ var (
 	initCmd = &cobra.Command{
 		Use:   "init",
 		Short: "create database and table",
-		Run: func(cmd *cobra.Command, args []string) {
-			Init()
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := Init()
+			if err != nil {
+				return err
+			}
+			return nil
 		},
 	}
 	cleanCmd = &cobra.Command{
@@ -32,26 +36,48 @@ var (
 	queryCmd = &cobra.Command{
 		Use:     "query",
 		Aliases: []string{"q"},
-		Short:   "query all validator info",
+		Short:   "query commands",
 		Run: func(cmd *cobra.Command, args []string) {
+			_ = cmd.Help()
+		},
+	}
+	queryValCmd = &cobra.Command{
+		Use:     "val",
+		Aliases: []string{"q"},
+		Short:   "query all validator info",
+		RunE: func(cmd *cobra.Command, args []string) error {
 			infos, err := GetValInfos()
 			if err != nil {
-				cmd.Println(err.Error())
-				_ = cmd.Help()
-				return
+				return err
 			}
 			for _, info := range infos {
 				cmd.Printf(info.String())
 			}
 			cmd.Printf("total:%d \n", len(infos))
-
+			return nil
+		},
+	}
+	queryVoterCmd = &cobra.Command{
+		Use:     "voters",
+		Aliases: []string{"q"},
+		Short:   "query all validator info",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			voters, err := GetVoterInfos()
+			if err != nil {
+				return err
+			}
+			for k, v := range voters {
+				cmd.Printf("voter %v, %s", k, v)
+			}
+			cmd.Printf("total:%d \n", len(voters))
+			return nil
 		},
 	}
 	startCmd = &cobra.Command{
 		Use:   "start [start height] [end height]",
 		Short: "Start valsta",
 		Args:  cobra.RangeArgs(2, 2),
-		RunE: func(cmd *cobra.Command, args []string) error{
+		RunE: func(cmd *cobra.Command, args []string) error {
 			startHeight, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
 				return err
@@ -60,11 +86,11 @@ var (
 			if err != nil {
 				return err
 			}
-			if startHeight > endHeight{
+			if startHeight > endHeight {
 				cmd.Println("startHeight cannot bigger than endHeight")
 				return errors.New("startHeight cannot bigger than endHeight")
 			}
-			if startHeight<=0{
+			if startHeight <= 0 {
 				return errors.New("startHeight error")
 			}
 			sta, err := ValSta(startHeight, endHeight)
@@ -80,7 +106,11 @@ var (
 func init() {
 	startCmd.Flags().StringVarP(&GrpcUrl, "grpc", "g", "localhost:9090", "-g <url>")
 	startCmd.Flags().StringVarP(&RpcUrl, "rpc", "r", "http://localhost:26657", "-r <url>")
+	queryVoterCmd.Flags().StringVarP(&GrpcUrl, "grpc", "g", "localhost:9090", "-g <url>")
+	queryVoterCmd.Flags().StringVarP(&RpcUrl, "rpc", "r", "http://localhost:26657", "-r <url>")
 
+	queryCmd.AddCommand(queryValCmd)
+	queryCmd.AddCommand(queryVoterCmd)
 	rootCmd.AddCommand(startCmd)
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(cleanCmd)

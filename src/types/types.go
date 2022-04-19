@@ -4,6 +4,24 @@ import (
 	"fmt"
 )
 
+type VoterInfo struct {
+	Address       string
+	VoteTimes     uint64
+	VoteProposals []uint64
+}
+
+func NewVoterInfo(address string, voteTimes uint64, voteProposals []uint64) VoterInfo {
+	return VoterInfo{
+		Address:       address,
+		VoteTimes:     voteTimes,
+		VoteProposals: voteProposals,
+	}
+}
+
+func (v VoterInfo) String() string {
+	return fmt.Sprintf("Address: %v, Times : %v, Proposals : %v \n", v.Address, v.VoteTimes, v.VoteProposals)
+}
+
 type ValidatorInfo struct {
 	Address    string
 	AccAddress string
