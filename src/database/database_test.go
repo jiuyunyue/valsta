@@ -12,7 +12,6 @@ import (
 	docker pull mysql:oracle
 	docker run -itd --name docker-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 -v ~/Docker/db/mysql/8.0.9:/var/lib/mysql mysql:oracle
 	docker run --name docker-mysql --privileged=true -d -v ~/Docker/mysql/data/:/var/lib/mysql -v ~/Docker/mysql/conf:/etc/mysql/conf.d -v ~/Docker/mysql/log:/var/log/mysql -p 3306:3306  -e MYSQL_ROOT_PASSWORD=123456  mysql:oracle
-
 */
 
 func Test_connect(t *testing.T) {
@@ -75,8 +74,8 @@ func TestContextInsertIntoValInfos(t *testing.T) {
 
 	start := int64(300069)
 	end := int64(300069)
-	uptime := grpcClient.QueryUptime(start, end)
-	jailed := grpcClient.QueryJailed(start, end)
+	uptime, _ := grpcClient.QueryUptime(start, end)
+	jailed, _ := grpcClient.QueryJailed(start, end)
 	for k, v := range jailed {
 		val := uptime[k]
 		if v == true && val.Jailed == false && len(val.AccAddress) != 0 {
