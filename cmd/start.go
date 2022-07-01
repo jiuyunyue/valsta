@@ -14,19 +14,24 @@ import (
 var GrpcUrl string
 var RpcUrl string
 
+const CacheNum = 10000
+
 func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 	grpcClient, err := client.NewGRPCClient(GrpcUrl, RpcUrl)
 	if err != nil {
 		return nil, err
 	}
 
-	var all types.Uptime
-
-	for tmp := int64(0); tmp < (endHeight-startHeight)/1000+1; tmp++ {
-		run := 1000*tmp + startHeight
-		end := 1000 + startHeight
+	all := make(types.Uptime)
+	times := (endHeight-startHeight)/CacheNum + 1
+	for tmp := int64(0); tmp < times; tmp++ {
+		run := CacheNum*tmp + startHeight
+		end := CacheNum + run
 		if end > endHeight {
 			end = endHeight
+		}
+		if run > endHeight {
+			run = endHeight
 		}
 
 		uptime, err := grpcClient.QueryUptime(run, end)
@@ -46,23 +51,26 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 			}
 		}
 
-		var noJail []string
-		for k, v := range uptime {
-			if v.Jailed == false {
-				noJail = append(noJail, k)
-			}
-		}
+		//var noJail []string
+		//for k, v := range uptime {
+		//	if v.Jailed == false {
+		//		noJail = append(noJail, k)
+		//	}
+		//}
 
 		content, err := json.Marshal(uptime)
 		if err != nil {
 			return nil, err
 		}
-
-		err = ioutil.WriteFile(fmt.Sprintf("%v.txt", run), content, 0644)
+		err = ioutil.WriteFile(fmt.Sprintf("%v_%v.txt", run, end), content, 0777)
 		if err != nil {
 			return nil, err
 		}
 
+		// overwrite
+		for k, v := range uptime {
+			all[k] = v
+		}
 	}
 
 	// set with db
