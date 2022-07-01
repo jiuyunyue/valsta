@@ -10,7 +10,7 @@ make build
 # init database
 ./build/valsta init
 # start at height 400000
-./build/valsta start 841500 1412246 -g peer0.testnet.uptick.network:9090 -r http://peer0.testnet.uptick.network:26657/
+./build/valsta start 841500 1412246  -g peer0.testnet.uptick.network:9090 -r http://peer0.testnet.uptick.network:26657/
 # query val
 ./build/valsta q val
 # query voters

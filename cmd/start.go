@@ -62,7 +62,7 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = ioutil.WriteFile(fmt.Sprintf("cache/%v_%v.txt", run, end), content, 0777)
+		err = ioutil.WriteFile(fmt.Sprintf("cache/%v_%v.json", run, end), content, 0777)
 		if err != nil {
 			return nil, err
 		}
@@ -71,6 +71,15 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 		for k, v := range uptime {
 			all[k] = v
 		}
+	}
+
+	content, err := json.Marshal(all)
+	if err != nil {
+		return nil, err
+	}
+	err = ioutil.WriteFile("cache/all.json", content, 0777)
+	if err != nil {
+		return nil, err
 	}
 
 	// set with db
