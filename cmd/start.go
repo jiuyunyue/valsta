@@ -62,7 +62,7 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = ioutil.WriteFile(fmt.Sprintf("%v_%v.txt", run, end), content, 0777)
+		err = ioutil.WriteFile(fmt.Sprintf("cache/%v_%v.txt", run, end), content, 0777)
 		if err != nil {
 			return nil, err
 		}
