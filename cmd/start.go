@@ -14,7 +14,7 @@ import (
 var GrpcUrl string
 var RpcUrl string
 
-const CacheNum = 1000
+const CacheNum = 100000
 
 func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 	grpcClient, err := client.NewGRPCClient(GrpcUrl, RpcUrl)
