@@ -55,7 +55,7 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = ioutil.WriteFile(fmt.Sprintf("cache/%v_%v.json", run, end), content, 0777)
+		err = ioutil.WriteFile(fmt.Sprintf("cache/%v_%v.json", run, end-1), content, 0777)
 		if err != nil {
 			return nil, err
 		}
@@ -63,7 +63,11 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 		// overwrite
 		for k, v := range uptime {
 			uptimeTmp := all[k]
+			uptimeTmp.Address = v.Address
+			uptimeTmp.AccAddress = v.AccAddress
+			uptimeTmp.SurRate = v.SurRate
 			uptimeTmp.Times += v.Times
+
 			if !uptimeTmp.Jailed {
 				uptimeTmp.Jailed = v.Jailed
 			}
