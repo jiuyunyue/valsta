@@ -34,11 +34,11 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 			run = endHeight
 		}
 
-		uptime, err := grpcClient.QueryUptime(run, end)
+		uptime, err := grpcClient.QueryUptime(run, end-1)
 		if err != nil {
 			return nil, err
 		}
-		jailed, err := grpcClient.QueryJailed(run, end)
+		jailed, err := grpcClient.QueryJailed(run, end-1)
 		if err != nil {
 			return nil, err
 		}
