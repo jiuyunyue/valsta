@@ -14,7 +14,7 @@ import (
 var GrpcUrl string
 var RpcUrl string
 
-const CacheNum = 100000
+const CacheNum = 1000
 
 func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 	grpcClient, err := client.NewGRPCClient(GrpcUrl, RpcUrl)
@@ -26,7 +26,7 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 	times := (endHeight-startHeight)/CacheNum + 1
 	for tmp := int64(0); tmp < times; tmp++ {
 		run := CacheNum*tmp + startHeight
-		end := CacheNum + run
+		end := CacheNum + run - 1
 		if end > endHeight {
 			end = endHeight
 		}
@@ -34,11 +34,11 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 			run = endHeight
 		}
 
-		uptime, err := grpcClient.QueryUptime(run, end-1)
+		uptime, err := grpcClient.QueryUptime(run, end)
 		if err != nil {
 			return nil, err
 		}
-		jailed, err := grpcClient.QueryJailed(run, end-1)
+		jailed, err := grpcClient.QueryJailed(run, end)
 		if err != nil {
 			return nil, err
 		}
@@ -55,7 +55,7 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = ioutil.WriteFile(fmt.Sprintf("cache/%v_%v.json", run, end-1), content, 0777)
+		err = ioutil.WriteFile(fmt.Sprintf("cache/%v_%v.json", run, end), content, 0777)
 		if err != nil {
 			return nil, err
 		}
