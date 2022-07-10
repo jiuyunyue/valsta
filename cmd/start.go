@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
-
-	"github.com/tendermint/tendermint/libs/json"
+	"strconv"
 
 	"github.com/jiuyunyue/valsta/src/client"
 	"github.com/jiuyunyue/valsta/src/database"
@@ -51,13 +51,6 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 			}
 		}
 
-		//var noJail []string
-		//for k, v := range uptime {
-		//	if v.Jailed == false {
-		//		noJail = append(noJail, k)
-		//	}
-		//}
-
 		content, err := json.Marshal(uptime)
 		if err != nil {
 			return nil, err
@@ -69,8 +62,20 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 
 		// overwrite
 		for k, v := range uptime {
-			all[k] = v
+			uptimeTmp := all[k]
+			uptimeTmp.Times += v.Times
+			if !uptimeTmp.Jailed {
+				uptimeTmp.Jailed = v.Jailed
+			}
 		}
+	}
+
+	// recalculate
+	for k, v := range all {
+		tmp := all[k]
+		num := float64(v.Times) / float64(endHeight-startHeight+1) * 100
+		tmp.SurRate = strconv.FormatFloat(num, 'f', 2, 64)
+		all[k] = tmp
 	}
 
 	content, err := json.Marshal(all)

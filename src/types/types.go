@@ -26,7 +26,7 @@ type ValidatorInfo struct {
 	Address    string
 	AccAddress string
 	Jailed     bool
-	Times      int64
+	Times      int64 `json:"times,string,omitempty"`
 	SurRate    string
 }
 
