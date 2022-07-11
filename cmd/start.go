@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
-
-	"github.com/tendermint/tendermint/libs/json"
+	"strconv"
 
 	"github.com/jiuyunyue/valsta/src/client"
 	"github.com/jiuyunyue/valsta/src/database"
@@ -14,7 +14,7 @@ import (
 var GrpcUrl string
 var RpcUrl string
 
-const CacheNum = 10000
+const CacheNum = 100000
 
 func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 	grpcClient, err := client.NewGRPCClient(GrpcUrl, RpcUrl)
@@ -26,7 +26,7 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 	times := (endHeight-startHeight)/CacheNum + 1
 	for tmp := int64(0); tmp < times; tmp++ {
 		run := CacheNum*tmp + startHeight
-		end := CacheNum + run
+		end := CacheNum + run - 1
 		if end > endHeight {
 			end = endHeight
 		}
@@ -51,13 +51,6 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 			}
 		}
 
-		//var noJail []string
-		//for k, v := range uptime {
-		//	if v.Jailed == false {
-		//		noJail = append(noJail, k)
-		//	}
-		//}
-
 		content, err := json.Marshal(uptime)
 		if err != nil {
 			return nil, err
@@ -69,8 +62,25 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 
 		// overwrite
 		for k, v := range uptime {
-			all[k] = v
+			uptimeTmp := all[k]
+			uptimeTmp.Address = v.Address
+			uptimeTmp.AccAddress = v.AccAddress
+			uptimeTmp.SurRate = v.SurRate
+			uptimeTmp.Times += v.Times
+
+			if !uptimeTmp.Jailed {
+				uptimeTmp.Jailed = v.Jailed
+			}
+			all[k] = uptimeTmp
 		}
+	}
+
+	// recalculate
+	for k, v := range all {
+		tmp := all[k]
+		num := float64(v.Times) / float64(endHeight-startHeight+1) * 100
+		tmp.SurRate = strconv.FormatFloat(num, 'f', 2, 64)
+		all[k] = tmp
 	}
 
 	content, err := json.Marshal(all)

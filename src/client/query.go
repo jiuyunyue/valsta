@@ -52,12 +52,7 @@ func (c *GClient) QueryUptime(start, end int64) (sig types.Uptime, err error) {
 			val.Address = key
 			val.AccAddress = validators[key].String()
 
-			if val.Times == 0 {
-				val.Times = 1
-			} else {
-				val.Times++
-			}
-
+			val.Times++
 			sig[key] = val
 		}
 	}
