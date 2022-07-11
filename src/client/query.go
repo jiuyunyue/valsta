@@ -48,10 +48,15 @@ func (c *GClient) QueryUptime(start, end int64) (sig types.Uptime, err error) {
 			}
 			key := strings.ToUpper(hex.EncodeToString(signature.ValidatorAddress))
 
+			if key == "F6E863E750CAAC822D1E388C938CDCEA2260E256" {
+				fmt.Printf("F6E863E750CAAC822D1E388C938CDCEA2260E256")
+			}
 			val := sig[key]
 			val.Address = key
 			val.AccAddress = validators[key].String()
-
+			if val.AccAddress == "uptick1c8y75a5nypmhngz5dktq9mjvp9d6auz9qp2msd" {
+				fmt.Printf("uptick1c8y75a5nypmhngz5dktq9mjvp9d6auz9qp2msd")
+			}
 			val.Times++
 			sig[key] = val
 		}
@@ -106,7 +111,7 @@ func (c *GClient) QueryValidators() (map[string]sdk.AccAddress, error) {
 	validatorInfos := make(map[string]sdk.AccAddress)
 	Pagination := &query.PageRequest{
 		Key:        []byte(""),
-		Limit:      1000,
+		Limit:      10000,
 		Offset:     0,
 		CountTotal: false,
 		Reverse:    false,
@@ -118,7 +123,6 @@ func (c *GClient) QueryValidators() (map[string]sdk.AccAddress, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	for _, val := range validators.Validators {
 		var pk cryptotypes.PubKey
 		err = cdc.UnpackAny(val.ConsensusPubkey, &pk)
@@ -146,7 +150,7 @@ func (c *GClient) QueryVoters() (voters map[string]types.VoterInfo, err error) {
 		queryEvent := fmt.Sprintf("proposal_vote.proposal_id=%v", i)
 		Pagination := &query.PageRequest{
 			Key:        []byte(""),
-			Limit:      200,
+			Limit:      20000,
 			Offset:     0,
 			CountTotal: false,
 			Reverse:    false,
@@ -174,4 +178,84 @@ func (c *GClient) QueryVoters() (voters map[string]types.VoterInfo, err error) {
 	}
 
 	return voters, nil
+}
+
+func (c *GClient) SignTimes(addr string) (heights []int, err error) {
+	start := 841500
+	end := 1412246
+
+	validators, err := c.QueryValidators()
+	if err != nil {
+		return heights, err
+	}
+
+	for from := start; from <= end; from++ {
+		block, err := c.TMServiceQuery.GetBlockByHeight(context.Background(), &tmservice.GetBlockByHeightRequest{Height: int64(from)})
+		if err != nil {
+			return heights, err
+		}
+
+		utils.CallClear()
+		now := float64(from-start) / float64(end-start) * 100
+		if now == 1 {
+			fmt.Printf("QueryUptime info : now at end : height %d \n", from)
+		} else {
+			fmt.Printf("QueryUptime info : now at %d : end %d  : total %d : %2f%% \n", from, end, end-start+1, now)
+		}
+		for _, signature := range block.Block.LastCommit.Signatures {
+			if len(signature.ValidatorAddress) == 0 {
+				continue
+			}
+			key := strings.ToUpper(hex.EncodeToString(signature.ValidatorAddress))
+
+			if validators[key].String() == addr {
+				heights = append(heights, from)
+			}
+
+		}
+	}
+
+	return heights, nil
+}
+
+func (c *GClient) SignHeight(addr string) (bool, int, error) {
+	start := 841500
+	end := 1412246
+	height := 0
+	have := false
+
+	validators, err := c.QueryValidators()
+	if err != nil {
+		return have, height, err
+	}
+
+	for from := start; from <= end; from++ {
+		block, err := c.TMServiceQuery.GetBlockByHeight(context.Background(), &tmservice.GetBlockByHeightRequest{Height: int64(from)})
+		if err != nil {
+			return have, height, err
+		}
+
+		utils.CallClear()
+		now := float64(from-start) / float64(end-start) * 100
+		if now == 1 {
+			fmt.Printf("QueryUptime info : now at end : height %d \n", from)
+		} else {
+			fmt.Printf("QueryUptime info : now at %d : end %d  : total %d : %2f%% \n", from, end, end-start+1, now)
+		}
+		for _, signature := range block.Block.LastCommit.Signatures {
+			if len(signature.ValidatorAddress) == 0 {
+				continue
+			}
+			key := strings.ToUpper(hex.EncodeToString(signature.ValidatorAddress))
+
+			if validators[key].String() == addr {
+				have = true
+				height = from
+				break
+			}
+
+		}
+	}
+
+	return have, height, err
 }

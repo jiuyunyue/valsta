@@ -18,6 +18,7 @@ make build
 # clean database
 ./build/valsta clean
 ```
+
 ## Use Guide
 There are only two steps required to use valsta
 ### Init
@@ -26,7 +27,6 @@ use `valsta init` to create database `valsta` and table `valdator_infos`
 use `valsta start [startHeight] [endHeight] -g <grpc address> -r <rpc address>` to start valsta.
 If you want to have a test with your local cosmos-base blockchain , just use `valsta start [startHeight] [endHeight]`,
 the flag `-g` have default value `localhost:9090` and the flag `-r` have default value `http://localhost:26657`
-
 ### Start with nohup
 ```bash
 nohup ./build/valsta start 841500 1412246  -g peer0.testnet.uptick.network:9090 -r http://peer0.testnet.uptick.network:26657/  > work.log 2>&1 & 

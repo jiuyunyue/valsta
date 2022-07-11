@@ -229,13 +229,13 @@ func TestQueryTxEvent(t *testing.T) {
 }
 
 func TestAddressConvert(t *testing.T) {
-	consAddress, err := sdk.ConsAddressFromBech32("uptickvalcons1ksw5fem64junr3330ssy65l9uj0xkg9k3nerlw")
+	valAddress, err := sdk.ValAddressFromBech32("uptickvaloper1c8y75a5nypmhngz5dktq9mjvp9d6auz9nel0up")
 	require.NoError(t, err)
-	AccAddress, err := sdk.AccAddressFromHex(hex.EncodeToString(consAddress.Bytes()))
+	AccAddress, err := sdk.AccAddressFromHex(hex.EncodeToString(valAddress.Bytes()))
 	require.NoError(t, err)
-	ValAddress, err := sdk.ValAddressFromHex(hex.EncodeToString(consAddress.Bytes()))
+	ValAddress, err := sdk.ValAddressFromHex(hex.EncodeToString(valAddress.Bytes()))
 	require.NoError(t, err)
-	ConsAddress, err := sdk.ConsAddressFromHex(hex.EncodeToString(consAddress.Bytes()))
+	ConsAddress, err := sdk.ConsAddressFromHex(hex.EncodeToString(valAddress.Bytes()))
 	require.NoError(t, err)
 
 	t.Logf("AccAddress:%s \n", AccAddress.String())
@@ -250,7 +250,7 @@ func TestQueryValVaa(t *testing.T) {
 	require.NoError(t, err)
 	Pagination := &query.PageRequest{
 		Key:        []byte(""),
-		Limit:      200,
+		Limit:      20000,
 		Offset:     0,
 		CountTotal: false,
 		Reverse:    false,
@@ -290,6 +290,7 @@ func TestQueryValidatorInfos(t *testing.T) {
 	require.NoError(t, err)
 	validators, err := c.QueryValidators()
 	require.NoError(t, err)
+	t.Log(len(validators))
 	for k, v := range validators {
 		t.Log("keys: ", k, "value:", v.String())
 	}

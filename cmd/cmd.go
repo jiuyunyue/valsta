@@ -42,9 +42,8 @@ var (
 		},
 	}
 	queryValCmd = &cobra.Command{
-		Use:     "val",
-		Aliases: []string{"q"},
-		Short:   "query all validator info",
+		Use:   "val",
+		Short: "query all validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			infos, err := GetValInfos()
 			if err != nil {
@@ -57,10 +56,45 @@ var (
 			return nil
 		},
 	}
+	querySignTimesCmd = &cobra.Command{
+		Use:   "signTimes [address]",
+		Args:  cobra.MinimumNArgs(1),
+		Short: "query sign times at 841500-1412246 ",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			height, err := SignTimes(args[0])
+			if err != nil {
+				return err
+			}
+			if len(height) != 0 {
+				cmd.Printf("total:%d \n start at %d \n", len(height), height[0])
+			} else {
+				cmd.Printf("can not find your address at height 841500-1412246")
+			}
+			return nil
+		},
+	}
+	querySignHeightCmd = &cobra.Command{
+		Use:   "signHeight [address]",
+		Args:  cobra.MinimumNArgs(1),
+		Short: "query sign height at 841500-1412246 ",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			have, height, err := SignHeight(args[0])
+			if err != nil {
+				return err
+			}
+
+			if have {
+				cmd.Printf("start at %d \n", height)
+			} else {
+				cmd.Printf("can not find your address at height 841500-1412246")
+			}
+			return nil
+		},
+	}
 	queryVoterCmd = &cobra.Command{
 		Use:     "voters",
 		Aliases: []string{"q"},
-		Short:   "query all validator info",
+		Short:   "query all voter info",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			voters, err := GetVoterInfos()
 			if err != nil {
@@ -108,7 +142,13 @@ func init() {
 	startCmd.Flags().StringVarP(&RpcUrl, "rpc", "r", "http://localhost:26657", "-r <url>")
 	queryVoterCmd.Flags().StringVarP(&GrpcUrl, "grpc", "g", "localhost:9090", "-g <url>")
 	queryVoterCmd.Flags().StringVarP(&RpcUrl, "rpc", "r", "http://localhost:26657", "-r <url>")
+	querySignHeightCmd.Flags().StringVarP(&GrpcUrl, "grpc", "g", "localhost:9090", "-g <url>")
+	querySignHeightCmd.Flags().StringVarP(&RpcUrl, "rpc", "r", "http://localhost:26657", "-r <url>")
+	querySignTimesCmd.Flags().StringVarP(&GrpcUrl, "grpc", "g", "localhost:9090", "-g <url>")
+	querySignTimesCmd.Flags().StringVarP(&RpcUrl, "rpc", "r", "http://localhost:26657", "-r <url>")
 
+	queryCmd.AddCommand(querySignTimesCmd)
+	queryCmd.AddCommand(querySignHeightCmd)
 	queryCmd.AddCommand(queryValCmd)
 	queryCmd.AddCommand(queryVoterCmd)
 	rootCmd.AddCommand(startCmd)
