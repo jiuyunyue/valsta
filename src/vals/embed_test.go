@@ -1,14 +1,10 @@
 package vals_test
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
 	"sort"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/jiuyunyue/valsta/cmd"
@@ -71,23 +67,23 @@ func Test_score(t *testing.T) {
 		//fmt.Printf("%v : %v \n", v.Address, v.Score)
 	}
 
-	f, err := os.Open("marketplace.txt")
-	require.NoError(t, err)
-	buf := bufio.NewReader(f)
+	//f, err := os.Open("marketplace.txt")
+	//require.NoError(t, err)
+	//buf := bufio.NewReader(f)
 
-	for {
-		line, err := buf.ReadString('\n')
-		line = strings.TrimSpace(line)
-		addressList[line] = true
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			require.NoError(t, err)
-		}
-	}
+	//for {
+	//	line, err := buf.ReadString('\n')
+	//	line = strings.TrimSpace(line)
+	//	addressList[line] = true
+	//	if err != nil {
+	//		if err == io.EOF {
+	//			break
+	//		}
+	//		require.NoError(t, err)
+	//	}
+	//}
 
-	for k, _ := range addressList {
+	for k := range addressList {
 		fmt.Printf("%v \n", k)
 	}
 	fmt.Printf("total : %v \n", len(addressList))

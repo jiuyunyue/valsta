@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/jiuyunyue/valsta/src/client"
-	"github.com/jiuyunyue/valsta/src/database"
 	"github.com/jiuyunyue/valsta/src/types"
 )
 
@@ -92,17 +91,9 @@ func ValSta(startHeight, endHeight int64) ([]types.ValidatorInfo, error) {
 		return nil, err
 	}
 
-	// set with db
-	db := database.GetDB()
-	defer db.Close()
-	err = database.ContextInsertIntoValInfos(all)
-	if err != nil {
-		return nil, err
-	}
-
-	validatorInfos, err := database.GetValidatorInfos()
-	if err != nil {
-		return nil, err
+	var validatorInfos []types.ValidatorInfo
+	for _, v := range all {
+		validatorInfos = append(validatorInfos, v)
 	}
 	return validatorInfos, nil
 }
@@ -117,4 +108,28 @@ func GetVoterInfos() (voters map[string]types.VoterInfo, err error) {
 		return nil, err
 	}
 	return voters, nil
+}
+
+func SignTimes(address string) ([]int, error) {
+	grpcClient, err := client.NewGRPCClient(GrpcUrl, RpcUrl)
+	if err != nil {
+		return nil, err
+	}
+	height, err := grpcClient.SignTimes(address)
+	if err != nil {
+		return nil, err
+	}
+	return height, nil
+}
+
+func SignHeight(address string) (bool, int, error) {
+	grpcClient, err := client.NewGRPCClient(GrpcUrl, RpcUrl)
+	if err != nil {
+		return false, 0, err
+	}
+	have, height, err := grpcClient.SignHeight(address)
+	if err != nil {
+		return false, 0, err
+	}
+	return have, height, nil
 }

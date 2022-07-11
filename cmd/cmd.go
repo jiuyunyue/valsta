@@ -14,25 +14,6 @@ var (
 		Short: "validator information collection for cosmos chains",
 		Run:   func(cmd *cobra.Command, args []string) { _ = cmd.Help() },
 	}
-	initCmd = &cobra.Command{
-		Use:   "init",
-		Short: "create database and table",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			err := Init()
-			if err != nil {
-				return err
-			}
-			return nil
-		},
-	}
-	cleanCmd = &cobra.Command{
-		Use:     "cleanDatabase",
-		Aliases: []string{"clean"},
-		Short:   "drop tables and database",
-		Run: func(cmd *cobra.Command, args []string) {
-			CleanDatabase()
-		},
-	}
 	queryCmd = &cobra.Command{
 		Use:     "query",
 		Aliases: []string{"q"},
@@ -41,26 +22,45 @@ var (
 			_ = cmd.Help()
 		},
 	}
-	queryValCmd = &cobra.Command{
-		Use:     "val",
-		Aliases: []string{"q"},
-		Short:   "query all validator info",
+	querySignTimesCmd = &cobra.Command{
+		Use:   "signTimes [address]",
+		Args:  cobra.MinimumNArgs(1),
+		Short: "query sign times at 841500-1412246 ",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			infos, err := GetValInfos()
+			height, err := SignTimes(args[0])
 			if err != nil {
 				return err
 			}
-			for _, info := range infos {
-				cmd.Printf(info.String())
+			if len(height) != 0 {
+				cmd.Printf("total:%d \n start at %d \n", len(height), height[0])
+			} else {
+				cmd.Printf("can not find your address at height 841500-1412246")
 			}
-			cmd.Printf("total:%d \n", len(infos))
+			return nil
+		},
+	}
+	querySignHeightCmd = &cobra.Command{
+		Use:   "signHeight [address]",
+		Args:  cobra.MinimumNArgs(1),
+		Short: "query sign height at 841500-1412246 ",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			have, height, err := SignHeight(args[0])
+			if err != nil {
+				return err
+			}
+
+			if have {
+				cmd.Printf("start at %d \n", height)
+			} else {
+				cmd.Printf("can not find your address at height 841500-1412246")
+			}
 			return nil
 		},
 	}
 	queryVoterCmd = &cobra.Command{
 		Use:     "voters",
 		Aliases: []string{"q"},
-		Short:   "query all validator info",
+		Short:   "query all voter info",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			voters, err := GetVoterInfos()
 			if err != nil {
@@ -108,12 +108,15 @@ func init() {
 	startCmd.Flags().StringVarP(&RpcUrl, "rpc", "r", "http://localhost:26657", "-r <url>")
 	queryVoterCmd.Flags().StringVarP(&GrpcUrl, "grpc", "g", "localhost:9090", "-g <url>")
 	queryVoterCmd.Flags().StringVarP(&RpcUrl, "rpc", "r", "http://localhost:26657", "-r <url>")
+	querySignHeightCmd.Flags().StringVarP(&GrpcUrl, "grpc", "g", "localhost:9090", "-g <url>")
+	querySignHeightCmd.Flags().StringVarP(&RpcUrl, "rpc", "r", "http://localhost:26657", "-r <url>")
+	querySignTimesCmd.Flags().StringVarP(&GrpcUrl, "grpc", "g", "localhost:9090", "-g <url>")
+	querySignTimesCmd.Flags().StringVarP(&RpcUrl, "rpc", "r", "http://localhost:26657", "-r <url>")
 
-	queryCmd.AddCommand(queryValCmd)
+	queryCmd.AddCommand(querySignTimesCmd)
+	queryCmd.AddCommand(querySignHeightCmd)
 	queryCmd.AddCommand(queryVoterCmd)
 	rootCmd.AddCommand(startCmd)
-	rootCmd.AddCommand(initCmd)
-	rootCmd.AddCommand(cleanCmd)
 	rootCmd.AddCommand(queryCmd)
 }
 
