@@ -48,15 +48,9 @@ func (c *GClient) QueryUptime(start, end int64) (sig types.Uptime, err error) {
 			}
 			key := strings.ToUpper(hex.EncodeToString(signature.ValidatorAddress))
 
-			if key == "F6E863E750CAAC822D1E388C938CDCEA2260E256" {
-				fmt.Printf("F6E863E750CAAC822D1E388C938CDCEA2260E256")
-			}
 			val := sig[key]
 			val.Address = key
 			val.AccAddress = validators[key].String()
-			if val.AccAddress == "uptick1c8y75a5nypmhngz5dktq9mjvp9d6auz9qp2msd" {
-				fmt.Printf("uptick1c8y75a5nypmhngz5dktq9mjvp9d6auz9qp2msd")
-			}
 			val.Times++
 			sig[key] = val
 		}
