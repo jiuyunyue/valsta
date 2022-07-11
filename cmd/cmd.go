@@ -14,46 +14,12 @@ var (
 		Short: "validator information collection for cosmos chains",
 		Run:   func(cmd *cobra.Command, args []string) { _ = cmd.Help() },
 	}
-	initCmd = &cobra.Command{
-		Use:   "init",
-		Short: "create database and table",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			err := Init()
-			if err != nil {
-				return err
-			}
-			return nil
-		},
-	}
-	cleanCmd = &cobra.Command{
-		Use:     "cleanDatabase",
-		Aliases: []string{"clean"},
-		Short:   "drop tables and database",
-		Run: func(cmd *cobra.Command, args []string) {
-			CleanDatabase()
-		},
-	}
 	queryCmd = &cobra.Command{
 		Use:     "query",
 		Aliases: []string{"q"},
 		Short:   "query commands",
 		Run: func(cmd *cobra.Command, args []string) {
 			_ = cmd.Help()
-		},
-	}
-	queryValCmd = &cobra.Command{
-		Use:   "val",
-		Short: "query all validator info",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			infos, err := GetValInfos()
-			if err != nil {
-				return err
-			}
-			for _, info := range infos {
-				cmd.Printf(info.String())
-			}
-			cmd.Printf("total:%d \n", len(infos))
-			return nil
 		},
 	}
 	querySignTimesCmd = &cobra.Command{
@@ -149,11 +115,8 @@ func init() {
 
 	queryCmd.AddCommand(querySignTimesCmd)
 	queryCmd.AddCommand(querySignHeightCmd)
-	queryCmd.AddCommand(queryValCmd)
 	queryCmd.AddCommand(queryVoterCmd)
 	rootCmd.AddCommand(startCmd)
-	rootCmd.AddCommand(initCmd)
-	rootCmd.AddCommand(cleanCmd)
 	rootCmd.AddCommand(queryCmd)
 }
 

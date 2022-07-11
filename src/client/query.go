@@ -205,7 +205,6 @@ func (c *GClient) SignTimes(addr string) (heights []int, err error) {
 			if validators[key].String() == addr {
 				heights = append(heights, from)
 			}
-
 		}
 	}
 
@@ -241,13 +240,12 @@ func (c *GClient) SignHeight(addr string) (bool, int, error) {
 				continue
 			}
 			key := strings.ToUpper(hex.EncodeToString(signature.ValidatorAddress))
-
-			if validators[key].String() == addr {
+			vaaAddr := validators[key].String()
+			if vaaAddr == addr {
 				have = true
 				height = from
-				break
+				return have, height, err
 			}
-
 		}
 	}
 

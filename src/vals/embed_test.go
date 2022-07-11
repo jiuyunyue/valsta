@@ -83,7 +83,7 @@ func Test_score(t *testing.T) {
 	//	}
 	//}
 
-	for k, _ := range addressList {
+	for k := range addressList {
 		fmt.Printf("%v \n", k)
 	}
 	fmt.Printf("total : %v \n", len(addressList))

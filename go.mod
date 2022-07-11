@@ -3,10 +3,9 @@ module github.com/jiuyunyue/valsta
 go 1.17
 
 require (
-	github.com/cosmos/cosmos-sdk v0.0.0-00010101000000-000000000000
-	github.com/go-sql-driver/mysql v1.5.0
+	github.com/cosmos/cosmos-sdk v0.44.6-0.20220104141845-0be9863cfed1
 	github.com/gogo/protobuf v1.3.3
-	github.com/jmoiron/sqlx v1.3.4
+	github.com/spf13/cobra v1.2.1
 	github.com/stretchr/testify v1.7.0
 	github.com/tendermint/tendermint v0.34.14
 	google.golang.org/grpc v1.42.0
@@ -77,7 +76,6 @@ require (
 	github.com/sasha-s/go-deadlock v0.2.1-0.20190427202633-1595213edefa // indirect
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
-	github.com/spf13/cobra v1.2.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.8.1 // indirect
@@ -104,7 +102,6 @@ require (
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
-	github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.44.6-0.20220104141845-0be9863cfed1
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
