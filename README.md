@@ -14,7 +14,7 @@ make build
 # query sign first height 
 ./build/valsta q signHeight <address> -g peer0.testnet.uptick.network:9090 -r http://peer0.testnet.uptick.network:26657/
 ```
-uptick1g9qle0zayz3mjnel3f9du7wdrddclh4hxnwcal
+
 ## Use Guide
 There are only two steps required to use valsta
 ### Init
