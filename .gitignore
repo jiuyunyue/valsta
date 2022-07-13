@@ -21,6 +21,3 @@
 build
 valsta
 *.txt
-
-# cache
-cache/*.json
