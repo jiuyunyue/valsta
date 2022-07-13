@@ -58,6 +58,34 @@ func TestQueryBalance(t *testing.T) {
 	t.Log(res1.String())
 }
 
+func TestTmQuery(t *testing.T) {
+	c, err := NewGRPCClient(UptickGrpcUrl, UptickGrpcUrl)
+	require.NoError(t, err)
+	for i := 841500; i <= 1412246; i += 1000 {
+		valSet, err := c.TMServiceQuery.GetValidatorSetByHeight(context.Background(), &tmservice.GetValidatorSetByHeightRequest{Height: int64(i)})
+		require.NoError(t, err)
+		require.NotNil(t, valSet.Validators)
+		block, err := c.TMServiceQuery.GetBlockByHeight(context.Background(), &tmservice.GetBlockByHeightRequest{Height: int64(i)})
+		require.NoError(t, err)
+		require.NotNil(t, block.Block.LastCommit.Signatures)
+		for _, v := range valSet.Validators {
+			if v.Address == "uptickvalcons1c8y75a5nypmhngz5dktq9mjvp9d6auz982vnsq" {
+				fmt.Println("find")
+			}
+		}
+		for _, v := range block.Block.LastCommit.Signatures {
+			if len(v.Signature) == 0 {
+				continue
+			}
+			hexStr := strings.ToUpper(hex.EncodeToString(v.ValidatorAddress))
+			if hexStr == "F6E863E750CAAC822D1E388C938CDCEA2260E256" {
+				fmt.Println("find")
+			}
+		}
+		fmt.Printf("now at %v  no found \n", i)
+	}
+}
+
 func TestTmQueryBlock(t *testing.T) {
 	c, err := NewGRPCClient(UptickGrpcUrl, UptickGrpcUrl)
 	require.NoError(t, err)

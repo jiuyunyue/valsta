@@ -1,10 +1,14 @@
 package vals_test
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/jiuyunyue/valsta/cmd"
@@ -67,25 +71,89 @@ func Test_score(t *testing.T) {
 		//fmt.Printf("%v : %v \n", v.Address, v.Score)
 	}
 
-	//f, err := os.Open("marketplace.txt")
-	//require.NoError(t, err)
-	//buf := bufio.NewReader(f)
+	f, err := os.Open("marketplace.txt")
+	require.NoError(t, err)
+	buf := bufio.NewReader(f)
 
-	//for {
-	//	line, err := buf.ReadString('\n')
-	//	line = strings.TrimSpace(line)
-	//	addressList[line] = true
-	//	if err != nil {
-	//		if err == io.EOF {
-	//			break
-	//		}
-	//		require.NoError(t, err)
-	//	}
-	//}
+	for {
+		line, err := buf.ReadString('\n')
+		line = strings.TrimSpace(line)
+		addressList[line] = true
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			require.NoError(t, err)
+		}
+	}
 
 	for k := range addressList {
 		fmt.Printf("%v \n", k)
 	}
 	fmt.Printf("total : %v \n", len(addressList))
+}
 
+func Test_compare(t *testing.T) {
+	oldFile := make(map[string]bool)
+
+	f, err := os.Open("old.txt")
+	require.NoError(t, err)
+	buf := bufio.NewReader(f)
+
+	for {
+		line, err := buf.ReadString('\n')
+		line = strings.TrimSpace(line)
+		oldFile[line] = true
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	newFile := make(map[string]bool)
+
+	f, err = os.Open("new.txt")
+	require.NoError(t, err)
+	buf = bufio.NewReader(f)
+
+	for {
+		line, err := buf.ReadString('\n')
+		line = strings.TrimSpace(line)
+		newFile[line] = true
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	fmt.Printf("old len : %d \n", len(oldFile))
+	fmt.Printf("new len : %d \n", len(newFile))
+
+	var compareAdd []string
+	for k, _ := range newFile {
+		if !oldFile[k] {
+			compareAdd = append(compareAdd, k)
+		}
+	}
+
+	var compareDel []string
+	for k, _ := range oldFile {
+		if !newFile[k] {
+			compareDel = append(compareDel, k)
+		}
+	}
+
+	fmt.Println("新添加的")
+	for _, v := range compareAdd {
+		fmt.Println(v)
+	}
+
+	fmt.Println("新删除的")
+	for _, v := range compareDel {
+		fmt.Println(v)
+	}
 }
